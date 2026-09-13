@@ -141,13 +141,14 @@ class BlueFox3DImageTo3DPipeline(Pipeline):
             if self.rembg_model is not None:
                 self.rembg_model.to(device)
 
-    def preprocess_image(self, input: Image.Image, bg_color: tuple = (0, 0, 0)) -> Image.Image:
+    def preprocess_image(self, input: Image.Image, bg_color: tuple = (0, 0, 0), keep_alpha: bool = False) -> Image.Image:
         """
         Preprocess the input image.
 
         Args:
             input: Input image (RGB or RGBA).
             bg_color: Background color (R, G, B) in 0~255. Default black (0,0,0).
+            keep_alpha: If True, return premultiplied RGBA instead of RGB-on-black.
         """
         # if has alpha channel, use it directly; otherwise, remove background
         has_alpha = False
@@ -169,8 +170,12 @@ class BlueFox3DImageTo3DPipeline(Pipeline):
             if self.low_vram:
                 self.rembg_model.cpu()
         output_np = np.array(output)
+        if output_np.ndim != 3 or output_np.shape[2] < 4:
+            raise ValueError("Preprocess expected an RGBA matte from rembg or the input alpha channel.")
         alpha = output_np[:, :, 3]
         bbox = np.argwhere(alpha > 0.8 * 255)
+        if bbox.size == 0:
+            raise ValueError("Empty foreground mask after background removal. Use a clearer object photo.")
         bbox = np.min(bbox[:, 1]), np.min(bbox[:, 0]), np.max(bbox[:, 1]), np.max(bbox[:, 0])
         center = (bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2
         size = max(bbox[2] - bbox[0], bbox[3] - bbox[1])
@@ -181,8 +186,11 @@ class BlueFox3DImageTo3DPipeline(Pipeline):
         rgb = output[:, :, :3]
         a = output[:, :, 3:4]
         bg = np.array(bg_color, dtype=np.float32) / 255.0
-        output = rgb * a + bg * (1.0 - a)
-        output = Image.fromarray((np.clip(output, 0, 1) * 255).astype(np.uint8))
+        rgb_comp = rgb * a + bg * (1.0 - a)
+        if keep_alpha:
+            rgba = np.concatenate([np.clip(rgb_comp, 0, 1), np.clip(a, 0, 1)], axis=-1)
+            return Image.fromarray((rgba * 255).astype(np.uint8), mode="RGBA")
+        output = Image.fromarray((np.clip(rgb_comp, 0, 1) * 255).astype(np.uint8))
         return output
 
     # =========================================================================

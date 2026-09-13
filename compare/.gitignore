@@ -1,0 +1,7 @@
+runs/
+*.glb
+*.pdf
+__pycache__/
+.DS_Store
+
+!BlueFox3D_vs_Pixal3D.pdf

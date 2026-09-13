@@ -65,7 +65,20 @@ Do **not** run `pip install -U huggingface_hub`. Hub 1.x breaks this stack.
 python inference.py --image assets/images/1_img.png --output ./output.glb --low_vram --resolution 1536
 ```
 
-`--low_vram` is required on 24 GB GPUs (L4 and similar). First run downloads [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) plus DINOv3 / MoGe / rembg into `~/.cache/huggingface/hub/`.
+Presets (same weights; only crop save, mesh cleanup, and steps/resolution change):
+
+```bash
+# Pixal3D-equivalent defaults
+python inference.py --image assets/images/1_img.png --output ./output.glb --low_vram --preset baseline --resolution 1536
+
+# Wrapper: island drop + light smooth, 1536, 12 steps
+python inference.py --image assets/images/1_img.png --output ./output.glb --low_vram --preset quality
+
+# Wrapper: same cleanup, 1024, 8 steps
+python inference.py --image assets/images/1_img.png --output ./output.glb --low_vram --preset fast
+```
+
+`--decimation`, `--texture-size`, `--cleanup`, `--save-preprocessed`, and `--render-stills` are also available. `--low_vram` is required on 24 GB GPUs (L4 and similar). First run downloads [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) plus DINOv3 / MoGe / rembg into `~/.cache/huggingface/hub/`.
 
 If `flash_attn` is not available, use PyTorch SDPA:
 
@@ -99,6 +112,8 @@ python inference_mv.py --views_dir assets/mv_images/example --output ./output_mv
 ```
 
 Put images plus a `transforms.json` in that directory (Blender/NeRF camera-to-world, Z-up). `--low_vram`, `--resolution`, and `ATTN_BACKEND` work the same as single-image inference. `--num_views N` uses only the first N views.
+
+Shipped example views: `assets/mv_images/example/` (four posed PNGs + `transforms.json`). There is no one-photo orbit synthesis; you need cameras.
 
 If your views are a 90° orbit at eye level, reuse `assets/mv_images/example/transforms.json` and point each `file_path` at your images. The first frame should be the front view.
 
