@@ -1,0 +1,21 @@
+{
+  "image": "assets/images/21_img.png",
+  "output": "/home/dharani/work/BlueFox3D/compare/ft_one_image/21_img/pixal3d_stock/output.glb",
+  "seed": 42,
+  "model_path": "Hydrilla/BlueFox3D",
+  "low_vram": true,
+  "resolution": 1536,
+  "pipeline_type": "1536_cascade",
+  "cleanup": false,
+  "keep_alpha": false,
+  "decimation_target": 250000,
+  "texture_size": 4096,
+  "remesh": true,
+  "ss_sampling_steps": 12,
+  "shape_slat_sampling_steps": 12,
+  "tex_slat_sampling_steps": 12,
+  "cleanup_stats": null,
+  "stills": [],
+  "preprocessed": "/home/dharani/work/BlueFox3D/compare/ft_one_image/21_img/pixal3d_stock/preprocessed.png",
+  "seconds": 436.43768286705017
+}

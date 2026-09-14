@@ -86,7 +86,7 @@ If `flash_attn` is not available, use PyTorch SDPA:
 ATTN_BACKEND=sdpa python inference.py --image assets/images/1_img.png --output ./output.glb --low_vram --resolution 1536
 ```
 
-Override the checkpoint with `BLUEFOX3D_MODEL` or `--model_path`.
+Override the checkpoint with `BLUEFOX3D_MODEL` or `--model_path`. Default remains [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D). An optional character shape-512 finetune (last 4 blocks, 1000 steps; other cascade stages still stock) is [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) — see [COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md).
 
 > `requirements-hfdemo.txt` is for the Hugging Face Spaces demo (H-series GPUs) and may not match other architectures.
 
@@ -96,7 +96,8 @@ Override the checkpoint with `BLUEFOX3D_MODEL` or `--model_path`.
 
 | | |
 |---|---|
-| Default weights | `Hydrilla/BlueFox3D` |
+| Default weights | [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) |
+| Optional character shape-512 | [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) (not a replacement) |
 | Env override | `BLUEFOX3D_MODEL` |
 | Config | `bluefox3d/config.py` → `DEFAULT_MODEL_PATH` |
 | Pipelines | `BlueFox3DImageTo3DPipeline`, `BlueFox3DMVImageTo3DPipeline` |
@@ -143,6 +144,8 @@ python train.py \
 ```
 
 `--data_dir` is a JSON string. Sparse structure needs `base`, `ss_latent`, `render_cond`; shape needs `base`, `shape_latent`, `render_cond`; texture needs `base`, `shape_latent`, `pbr_latent`, `render_cond`. Example configs live in `configs/gen/`.
+
+A 4× L4 character shape-512 run (Objaverse-LVIS subset, last 4 blocks, 1000 steps) is documented in [COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md) and [CHARACTER_FINETUNE_L4.md](CHARACTER_FINETUNE_L4.md). Config: `configs/gen/shape512_mycategory_l4.json`. That finetune is **not** better-than-Pixal3D on hold-out; it is a small mid-stage weight swap.
 
 ---
 

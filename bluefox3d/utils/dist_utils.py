@@ -19,37 +19,14 @@ def setup_dist(rank, local_rank, world_size, master_addr, master_port):
 
 def read_file_dist(path):
     """
-    Read the binary file distributedly.
-    File is only read once by the rank 0 process and broadcasted to other processes.
+    Read a checkpoint file.
 
-    Returns:
-        data (io.BytesIO): The binary data read from the file.
+    Each rank reads from local disk. Broadcasting a multi-GB file as a CUDA
+    ByteTensor OOMs 24 GB L4s (model already occupies most of VRAM).
     """
-    if dist.is_initialized() and dist.get_world_size() > 1:
-        # read file
-        size = torch.LongTensor(1).cuda()
-        if dist.get_rank() == 0:
-            with open(path, 'rb') as f:
-                data = f.read()
-            data = torch.ByteTensor(
-                torch.UntypedStorage.from_buffer(data, dtype=torch.uint8)
-            ).cuda()
-            size[0] = data.shape[0]
-        # broadcast size
-        dist.broadcast(size, src=0)
-        if dist.get_rank() != 0:
-            data = torch.ByteTensor(size[0].item()).cuda()
-        # broadcast data
-        dist.broadcast(data, src=0)
-        # convert to io.BytesIO
-        data = data.cpu().numpy().tobytes()
-        data = io.BytesIO(data)
-        return data
-    else:
-        with open(path, 'rb') as f:
-            data = f.read()
-        data = io.BytesIO(data)
-        return data
+    with open(path, 'rb') as f:
+        data = f.read()
+    return io.BytesIO(data)
     
 
 def unwrap_dist(model):

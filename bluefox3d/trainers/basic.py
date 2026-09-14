@@ -90,6 +90,7 @@ class BasicTrainer:
         snapshot_num_samples=64,
         num_workers=None,
         debug=False,
+        trainable_last_blocks=None,
         i_print=1000,
         i_log=500,
         i_sample=10000,
@@ -105,6 +106,7 @@ class BasicTrainer:
         self.batch_split = batch_split if batch_split is not None else 1
         self.max_steps = max_steps
         self.debug = debug
+        self.trainable_last_blocks = trainable_last_blocks
         self.optimizer_config = optimizer
         self.lr_scheduler_config = lr_scheduler
         self.elastic_controller_config = elastic
@@ -221,6 +223,25 @@ class BasicTrainer:
         """
         Initialize models and more.
         """
+        if self.trainable_last_blocks is not None:
+            n = int(self.trainable_last_blocks)
+            for name, model in self.models.items():
+                if not hasattr(model, 'blocks'):
+                    continue
+                for p in model.parameters():
+                    p.requires_grad = False
+                for block in model.blocks[-n:]:
+                    for p in block.parameters():
+                        p.requires_grad = True
+                if hasattr(model, 'out_layer'):
+                    for p in model.out_layer.parameters():
+                        p.requires_grad = True
+                n_train = sum(p.numel() for p in model.parameters() if p.requires_grad)
+                n_all = sum(p.numel() for p in model.parameters())
+                if self.is_master:
+                    print(f'L4 freeze {name}: last {n} blocks + out_layer trainable '
+                          f'({n_train:,}/{n_all:,} params)')
+
         if self.world_size > 1:
             # Prepare distributed data parallel
             self.training_models = {
@@ -229,7 +250,7 @@ class BasicTrainer:
                     device_ids=[self.local_rank],
                     output_device=self.local_rank,
                     bucket_cap_mb=128,
-                    find_unused_parameters=False
+                    find_unused_parameters=self.trainable_last_blocks is not None
                 )
                 for name, model in self.models.items()
             }
@@ -258,10 +279,14 @@ class BasicTrainer:
             self.ema_params = [copy.deepcopy(self.master_params) for _ in self.ema_rate]
 
         # Initialize optimizer
-        if hasattr(torch.optim, self.optimizer_config['name']):
-            self.optimizer = getattr(torch.optim, self.optimizer_config['name'])(self.master_params, **self.optimizer_config['args'])
+        opt_name = self.optimizer_config['name']
+        if opt_name in ('AdamW8bit', 'Adam8bit'):
+            import bitsandbytes as bnb
+            self.optimizer = getattr(bnb.optim, opt_name)(self.master_params, **self.optimizer_config['args'])
+        elif hasattr(torch.optim, opt_name):
+            self.optimizer = getattr(torch.optim, opt_name)(self.master_params, **self.optimizer_config['args'])
         else:
-            self.optimizer = globals()[self.optimizer_config['name']](self.master_params, **self.optimizer_config['args'])
+            self.optimizer = globals()[opt_name](self.master_params, **self.optimizer_config['args'])
         
         # Initalize learning rate scheduler
         if self.lr_scheduler_config is not None:
@@ -1079,7 +1104,8 @@ class BasicTrainer:
                     print('\n\033[93mWarning: NaN detected in gradients. Skipping update.\033[0m')
         else:
             prev_scale = 1.0
-            if not any(not p.grad.isfinite().all() for p in self.model_params):
+            if not any(p.grad is not None and not p.grad.isfinite().all() for p in self.model_params):
+                torch.cuda.empty_cache()
                 self.optimizer.step()
             else:
                 print('\n\033[93mWarning: NaN detected in gradients. Skipping update.\033[0m') 
@@ -1275,7 +1301,8 @@ class BasicTrainer:
         if self.world_size > 1:
             dist.barrier()
         if self.is_master:
-            self.writer.close()
+            if self.writer is not None:
+                self.writer.close()
             print('Training finished.')
             
     def profile(self, wait=2, warmup=3, active=5):

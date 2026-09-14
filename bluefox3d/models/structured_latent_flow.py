@@ -249,7 +249,11 @@ class SLatFlowModel(nn.Module):
             cond = manual_cast(cond, self.dtype)
 
         for block in self.blocks:
-            h = block(h, t_emb, cond)
+            if self.training and not any(p.requires_grad for p in block.parameters()):
+                with torch.no_grad():
+                    h = block(h, t_emb, cond)
+            else:
+                h = block(h, t_emb, cond)
 
         h = manual_cast(h, x.dtype)
         h = h.replace(F.layer_norm(h.feats, h.feats.shape[-1:]))
