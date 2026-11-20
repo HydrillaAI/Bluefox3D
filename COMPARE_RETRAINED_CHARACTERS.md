@@ -46,9 +46,23 @@ Same 149 LVIS train GLBs as the earlier shape-512 run. Hold-out 20 unused. Optim
 
 ---
 
-## 3. Honesty
+## 3. 15-Image Open-Weights Benchmark Context (Single L4 24 GB, Seed 42)
 
-Do not say “retrained BlueFox3D on characters.” Say: three extra last-4-block stages on a small LVIS set, plus the old shape-512. On `21_img` the pack **looks worse** than stock (fragmented hat/body, extra floating pieces). Mesh counts moved; that is not a quality metric. Hold-out 20 GLBs still unused until a real compare. Default app weights stay stock.
+Measured across 15 diverse images from `assets/images/` (`BlueFox3D (Stock)` vs `BlueFox3D (Char Pack)` vs `TRELLIS.2-4B` vs `Hunyuan3D-2.1` vs `Hi3DGen`):
+
+| Model | Completed | Avg Time / Asset | Avg Vertices | Avg Faces | Avg GLB Size | Output Type |
+|---|---:|---:|---:|---:|---:|---|
+| **BlueFox3D (Stock)** (`Hydrilla/BlueFox3D`) | 15 / 15 | 4.2 min (254 s) | 199,836 | 214,576 | 11.3 MB | 2048 PBR maps |
+| **BlueFox3D (Char Pack)** (`Hydrilla/BlueFox3D-retrained-characters`) | 15 / 15 | 4.4 min (266 s) | 203,623 | 214,524 | 11.7 MB | 2048 PBR maps |
+| **TRELLIS.2-4B** (`microsoft/TRELLIS.2-4B`) | 15 / 15 | 9.4 min (564 s) | 219,553 | 239,819 | 19.7 MB | 2048 PBR maps |
+| **Hunyuan3D-2.1** (`tencent/Hunyuan3D-2.1`) | 15 / 15 | 11.8 min (709 s) | 31,939 | 40,000 | 6.2 MB | Painted mesh (40k remesh) |
+| **Hi3DGen** (`Stable-X/trellis-normal-v0-1`) | 15 / 15 | 1.5 min (88 s) | 426,673 | 853,476 | 19.5 MB | Clay mesh (no PBR) |
+
+---
+
+## 4. Honesty
+
+Do not say “retrained BlueFox3D on characters.” Say: three extra last-4-block stages on a small LVIS set, plus the old shape-512. On `21_img` the pack **looks worse** than stock (fragmented hat/body, extra floating pieces). Across the 15 images, differences from stock are small local details with no clear quality win. Mesh counts moved; that is not a quality metric. Hold-out 20 GLBs still unused until a real compare. Default app weights stay stock.
 
 ---
 

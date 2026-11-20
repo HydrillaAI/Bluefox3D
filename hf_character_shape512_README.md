@@ -56,13 +56,19 @@ LVIS keys (no class named `character`): person, teddy bear, doll, figurine, stat
 
 Same photo `assets/images/21_img.png` (jester), seed `42`, `--preset baseline`, `--resolution 1536`, `--low_vram`.
 
-| | Stock Pixal3D / BlueFox3D | This shape-512 |
-|---|---|---|
-| Weights | `Hydrilla/BlueFox3D` | this repo for shape-512 only |
-| Vertices | 210,075 | 198,274 |
-| Faces | 246,515 | 235,199 |
+| | Stock [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) | This `shape-512` finetune | [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) |
+|---|---|---|---|
+| Weights | stock cascade | this repo for shape-512 only | 4-stage L4 pack |
+| Vertices | 210,075 | 198,274 | 197,039 |
+| Faces | 246,515 | 235,199 | 236,397 |
+| Runtime | 436.4 s | 437.1 s | 396 s |
+| Status | **Recommended default** | Experimental | Experimental |
 
 The two GLBs are **not identical**, but they look similar. This is **not** a quality-win claim. `21_img` is a demo photo, not one of the 20 hold-out meshes.
+
+### 15-Image Open-Weights Context (Single L4 24 GB, Seed 42)
+
+For broader context across 15 test images on a single L4: **BlueFox3D (Stock)** averaged 4.2 min / 199,836 verts / 214,576 faces / 11.3 MB (2048 PBR), vs **BlueFox3D (Char Pack)** (4.4 min / 203,623 verts / 214,524 faces / 11.7 MB), **TRELLIS.2-4B** (9.4 min / 219,553 verts / 239,819 faces / 19.7 MB), **Hunyuan3D-2.1** (11.8 min / 31,939 verts / 40,000 faces / 6.2 MB), and **Hi3DGen** (1.5 min / 426,673 verts / 853,476 faces / 19.5 MB clay mesh). See [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) and [`HydrillaAI/Bluefox3D`](https://github.com/HydrillaAI/Bluefox3D) for full details.
 
 ## Use
 

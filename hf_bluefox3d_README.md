@@ -63,8 +63,39 @@ python inference_mv.py --views_dir assets/mv_images/example --output ./output_mv
 
 ## Hardware Notes
 
-- **24 GB GPUs (NVIDIA L4 / RTX 3090 / RTX 4090):** Supported at `1536` with `--low_vram` (stages offloaded to CPU between steps; ~4–8 min per asset depending on GPU and preset).
+- **24 GB GPUs (NVIDIA L4 / RTX 3090 / RTX 4090):** Supported at `1536` with `--low_vram` (stages offloaded to CPU between steps; ~4.2 min warm sequential average per asset, ~6–9 min cold CLI run).
 - **40 GB+ GPUs (A100 / H100):** Can run without `--low_vram` for faster execution.
+
+---
+
+## Benchmarks & Comparisons
+
+### 15-Image Open-Weights Benchmark (Single NVIDIA L4, 24 GB VRAM, Seed 42)
+
+Measured directly from generated GLBs and run metadata across 15 diverse images (objects, characters, scenes/dioramas):
+
+| Model | Checkpoint / Source | Completed | Avg Time / Asset | Avg Vertices | Avg Faces | Avg GLB Size | Output Type |
+|---|---|---:|---:|---:|---:|---:|---|
+| **BlueFox3D (Stock)** | [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) | 15 / 15 | 4.2 min (254 s) | 199,836 | 214,576 | 11.3 MB | 2048 PBR maps |
+| **BlueFox3D (Char Pack)** | [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) | 15 / 15 | 4.4 min (266 s) | 203,623 | 214,524 | 11.7 MB | 2048 PBR maps |
+| **TRELLIS.2-4B** | `microsoft/TRELLIS.2-4B` | 15 / 15 | 9.4 min (564 s) | 219,553 | 239,819 | 19.7 MB | 2048 PBR maps |
+| **Hunyuan3D-2.1** | `tencent/Hunyuan3D-2.1` | 15 / 15 | 11.8 min (709 s) | 31,939 | 40,000 | 6.2 MB | Painted mesh (40k remesh) |
+| **Hi3DGen** | `Stable-X/trellis-normal-v0-1` | 15 / 15 | 1.5 min (88 s) | 426,673 | 853,476 | 19.5 MB | Clay mesh (no PBR) |
+
+**Observed trade-offs & methodology (no uncomputed Chamfer/CLIP/FID scores):**
+- **BlueFox3D (Stock):** Recommended default. Preserves input color fidelity with 2048 PBR maps and completes all 15/15 on a 24 GB L4 at `1536` (`--low_vram`); observed artifacts include a stray staff on `21_img`, a base slab on `5_img`, and rug fragments on `s_18_img`.
+- **BlueFox3D (Char Pack):** Very close to stock on most images, reproduces stock artifacts on `21_img` / `5_img`, and fragmented worse on the isolated `21_img` check (experimental only).
+- **TRELLIS.2-4B:** Strong geometry and 2048 PBR maps, with larger GLBs (19.7 MB avg) and ~2.2× slower runtime (~9.4 min avg) on L4.
+- **Hunyuan3D-2.1:** Lightest GLBs (40k faces, 6.2 MB avg); averaged 11.8 min in this 5-model batch (3.9 min in an earlier warm 4-model run); failed on `s_15_img` (invented table disc), lost objects to background removal on `s_18_img`, and shifted colors on `7_img` / `9_img`.
+- **Hi3DGen:** Fastest runtime and sharpest clay geometry (`853,476` avg faces), with no PBR textures (requires a separate texturing step).
+
+### BlueFox3D Variants Compared (`21_img.png`, Seed 42, 1536 `--low_vram`)
+
+| Repo | What Changed | Vertices | Faces | GLB Size | Status |
+|---|---|---:|---:|---:|---|
+| [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) | Stock 1.3B 3-stage cascade | 210,075–211,389 | 246,515–246,891 | 14.0 MB | **Recommended default** |
+| [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) | Shape-512 only (last 4 blocks, 1000 steps) | 198,274 | 235,199 | — | Experimental |
+| [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) | 4-stage L4 pack (SS-64, shape-1024, tex-1024 + shape-512) | 197,039 | 236,397 | 13.2 MB | Experimental |
 
 ---
 

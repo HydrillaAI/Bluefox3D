@@ -51,6 +51,24 @@ LVIS keys (no class named `character`): person, teddy bear, doll, figurine, stat
 | PBR / tex | **120** (shader dump failed on the rest) | Tex-1024 only |
 | Hold-out GLBs | 20 | **Never** |
 
+## Comparisons (15-Image L4 Benchmark & `21_img.png`)
+
+### 15-Image Open-Weights Benchmark (Single NVIDIA L4, 24 GB VRAM, Seed 42)
+
+| Model | Checkpoint / Source | Completed | Avg Time / Asset | Avg Vertices | Avg Faces | Avg GLB Size | Output Type |
+|---|---|---:|---:|---:|---:|---:|---|
+| **BlueFox3D (Stock)** | [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) | 15 / 15 | 4.2 min (254 s) | 199,836 | 214,576 | 11.3 MB | 2048 PBR maps |
+| **BlueFox3D (Char Pack)** | **`Hydrilla/BlueFox3D-retrained-characters`** | 15 / 15 | 4.4 min (266 s) | 203,623 | 214,524 | 11.7 MB | 2048 PBR maps |
+| **TRELLIS.2-4B** | `microsoft/TRELLIS.2-4B` | 15 / 15 | 9.4 min (564 s) | 219,553 | 239,819 | 19.7 MB | 2048 PBR maps |
+| **Hunyuan3D-2.1** | `tencent/Hunyuan3D-2.1` | 15 / 15 | 11.8 min (709 s) | 31,939 | 40,000 | 6.2 MB | Painted mesh (40k remesh) |
+| **Hi3DGen** | `Stable-X/trellis-normal-v0-1` | 15 / 15 | 1.5 min (88 s) | 426,673 | 853,476 | 19.5 MB | Clay mesh (no PBR) |
+
+Across the 15 images, this pack produces outputs very close to stock `Hydrilla/BlueFox3D` (small local deltas) and reproduces stock artifacts (`21_img` stray staff, `5_img` base slab). On the isolated `21_img.png` test (seed 42, 1536 `--low_vram`, 250k decimation):
+
+- **Stock [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D):** 211,389 verts, 246,891 faces, 14.0 MB, 376 s (**Recommended default**)
+- **[`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512):** 198,274 verts, 235,199 faces, 437.1 s
+- **This 4-stage pack:** 197,039 verts, 236,397 faces, 13.2 MB, 396 s (more fragmented on `21_img`)
+
 ## Use
 
 ```bash

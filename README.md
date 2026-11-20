@@ -152,9 +152,40 @@ A 4× L4 character shape-512 run (Objaverse-LVIS subset, last 4 blocks, 1000 ste
 
 ## Model Cards & Benchmarks
 
-- Base Hugging Face card draft: [hf_bluefox3d_README.md](hf_bluefox3d_README.md) (for [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D))
-- Character pack card: [hf_retrained_characters_README.md](hf_retrained_characters_README.md) (for [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters))
-- One-image & cascade evaluations: [COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md), [COMPARE_RETRAINED_CHARACTERS.md](COMPARE_RETRAINED_CHARACTERS.md)
+### 1. Open-Weights 15-Image Benchmark (Single NVIDIA L4, 24 GB VRAM, Seed 42)
+
+Measured directly from generated GLBs and run metadata on a single NVIDIA L4 (`g2-standard-8`, 24 GB VRAM) across 15 diverse images from `assets/images/` (objects, characters, scenes/dioramas):
+
+| Model | Checkpoint / Source | Completed | Avg Time / Asset | Avg Vertices | Avg Faces | Avg GLB Size | Output Type |
+|---|---|---:|---:|---:|---:|---:|---|
+| **BlueFox3D (Stock)** | [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) | 15 / 15 | 4.2 min (254 s) | 199,836 | 214,576 | 11.3 MB | 2048 PBR maps |
+| **BlueFox3D (Char Pack)** | [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) | 15 / 15 | 4.4 min (266 s) | 203,623 | 214,524 | 11.7 MB | 2048 PBR maps |
+| **TRELLIS.2-4B** | `microsoft/TRELLIS.2-4B` | 15 / 15 | 9.4 min (564 s) | 219,553 | 239,819 | 19.7 MB | 2048 PBR maps |
+| **Hunyuan3D-2.1** | `tencent/Hunyuan3D-2.1` | 15 / 15 | 11.8 min (709 s) | 31,939 | 40,000 | 6.2 MB | Painted mesh (40k remesh) |
+| **Hi3DGen** | `Stable-X/trellis-normal-v0-1` | 15 / 15 | 1.5 min (88 s) | 426,673 | 853,476 | 19.5 MB | Clay mesh (no PBR) |
+
+**Methodology & observed trade-offs (no uncomputed Chamfer/CLIP/FID scores):**
+- **Timing caveats:** BlueFox3D timings reflect `--low_vram` CPU↔GPU stage swapping in warm sequential runs (~4.2–4.4 min/asset; cold single-image CLI runs including model load take ~6–9 min). Hunyuan3D-2.1 averaged 11.8 min/asset in this 5-model batch (3.9 min/asset in an earlier warm 4-model run). Hi3DGen is fastest because it outputs untextured clay geometry with no decimation.
+- **BlueFox3D (Stock):** Recommended default. Preserves input color fidelity on stylized props/characters (`7_img`, `9_img`) with 2048 PBR maps; observed failure modes include an unprompted staff on `21_img`, a base slab on `5_img`, and rug fragments on `s_18_img`.
+- **BlueFox3D (Char Pack):** Very close to stock on most of the 15 images, reproduces the `21_img` / `5_img` artifacts, and fragmented worse in the isolated `21_img` test.
+- **TRELLIS.2-4B:** Strong geometry and 2048 PBR maps, with larger GLBs (19.7 MB avg) and ~2.2× slower runtime than BlueFox3D on a 24 GB L4.
+- **Hunyuan3D-2.1:** Lightest GLBs (40k faces, 6.2 MB avg); failed on `s_15_img` (invented a large table disc), lost scene objects to background removal on `s_18_img`, and shifted colors on `7_img` / `9_img`.
+- **Hi3DGen:** Sharpest clay geometry (`853,476` avg faces) and fastest runtime, but outputs no PBR textures (requires a separate texturing pipeline).
+
+### 2. BlueFox3D Checkpoints Compared
+
+| Repo | What Changed | `21_img.png` (Seed 42, 1536 `--low_vram`) | Status |
+|---|---|---|---|
+| [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) | Stock Pixal3D / TRELLIS.2-architecture 1.3B 3-stage cascade | 210,075–211,389 verts, 246,515–246,891 faces, 14.0 MB, 376–436 s | **Recommended default** |
+| [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) | Shape-512 only (last 4 blocks, 1000 steps on 149 LVIS character GLBs) | 198,274 verts, 235,199 faces, 437.1 s (small mid-stage shift) | Experimental |
+| [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) | 4-stage L4 pack (SS-64, shape-1024, tex-1024 finetuned + copied shape-512) | 197,039 verts, 236,397 faces, 13.2 MB, 396 s (more fragmented on `21_img`) | Experimental |
+
+### Docs & Cards
+
+- Base Hugging Face card source: [hf_bluefox3d_README.md](hf_bluefox3d_README.md) ([`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D))
+- Character shape-512 card source: [hf_character_shape512_README.md](hf_character_shape512_README.md) ([`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512))
+- Character 4-stage pack card source: [hf_retrained_characters_README.md](hf_retrained_characters_README.md) ([`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters))
+- Detailed single-image & cascade notes: [COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md), [COMPARE_RETRAINED_CHARACTERS.md](COMPARE_RETRAINED_CHARACTERS.md)
 
 ---
 
