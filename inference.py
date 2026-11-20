@@ -84,9 +84,9 @@ IMAGE_COND_CONFIGS = {
 # Model Loading
 # ============================================================================
 
-def build_image_cond_model(config: dict):
+def build_image_cond_model(config: dict, backbone=None):
     from bluefox3d.trainers.flow_matching.mixins.image_conditioned_proj import DinoV3ProjFeatureExtractor
-    model = DinoV3ProjFeatureExtractor(**config)
+    model = DinoV3ProjFeatureExtractor(**config, backbone=backbone)
     model.eval()
     return model
 
@@ -103,21 +103,27 @@ def init_pipeline(model_path=MODEL_PATH, device="cuda", low_vram=False):
     print(f"[Pipeline] Loading from {model_path}...")
     pipeline = BlueFox3DImageTo3DPipeline.from_pretrained(model_path)
 
-    print("[ImageCond] Building DinoV3ProjFeatureExtractor models...")
+    print("[ImageCond] Building DinoV3ProjFeatureExtractor models (sharing DINOv3 backbone)...")
     pipeline.image_cond_model_ss = build_image_cond_model(IMAGE_COND_CONFIGS["ss"])
-    pipeline.image_cond_model_shape_512 = build_image_cond_model(IMAGE_COND_CONFIGS["shape_512"])
-    pipeline.image_cond_model_shape_1024 = build_image_cond_model(IMAGE_COND_CONFIGS["shape_1024"])
-    pipeline.image_cond_model_tex_1024 = build_image_cond_model(IMAGE_COND_CONFIGS["tex_1024"])
+    shared_dino = pipeline.image_cond_model_ss.model
+    pipeline.image_cond_model_shape_512 = build_image_cond_model(IMAGE_COND_CONFIGS["shape_512"], backbone=shared_dino)
+    pipeline.image_cond_model_shape_1024 = build_image_cond_model(IMAGE_COND_CONFIGS["shape_1024"], backbone=shared_dino)
+    pipeline.image_cond_model_tex_1024 = build_image_cond_model(IMAGE_COND_CONFIGS["tex_1024"], backbone=shared_dino)
 
     if low_vram:
         # Low-VRAM mode: models stay on CPU, loaded to GPU on-demand per stage.
         # Peak VRAM = one flow model + one DinoV3, not all ~18 GB at once.
-        print("[NAF] Pre-downloading NAF upsampler weights (CPU only)...")
+        print("[NAF] Pre-downloading NAF upsampler weights (CPU only, sharing instance)...")
+        shared_naf = None
         for attr in ['image_cond_model_ss', 'image_cond_model_shape_512',
                      'image_cond_model_shape_1024', 'image_cond_model_tex_1024']:
             m = getattr(pipeline, attr, None)
             if m is not None and getattr(m, 'use_naf_upsample', False):
-                m._load_naf()
+                if shared_naf is None:
+                    m._load_naf()
+                    shared_naf = m.naf_model
+                else:
+                    m.naf_model = shared_naf
         pipeline._device = torch.device(device)
         pipeline.low_vram = True
         print("[Pipeline] Low-VRAM mode enabled.")
@@ -329,13 +335,34 @@ def run_inference(
 
     # Extract GLB (do this before any extra GPU renders; those can poison the CUDA context)
     print("[Inference] Extracting GLB...")
-    glb = o_voxel.postprocess.to_glb(
-        vertices=mesh.vertices, faces=mesh.faces, attr_volume=mesh.attrs,
-        coords=mesh.coords, attr_layout=pipeline.pbr_attr_layout,
-        grid_size=res, aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
-        decimation_target=decimation_target, texture_size=texture_size,
-        remesh=remesh, remesh_band=1, remesh_project=0, use_tqdm=True,
-    )
+    pbr_attr_layout = pipeline.pbr_attr_layout
+    del mesh_list, shape_slat, tex_slat
+    import gc
+    gc.collect()
+    torch.cuda.empty_cache()
+
+    try:
+        glb = o_voxel.postprocess.to_glb(
+            vertices=mesh.vertices, faces=mesh.faces, attr_volume=mesh.attrs,
+            coords=mesh.coords, attr_layout=pbr_attr_layout,
+            grid_size=res, aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
+            decimation_target=decimation_target, texture_size=texture_size,
+            remesh=remesh, remesh_band=1, remesh_project=0, use_tqdm=True,
+        )
+    except (RuntimeError, torch.OutOfMemoryError) as e:
+        if remesh:
+            print(f"[Inference] Warning: to_glb failed with remesh=True ({e}). Retrying with remesh=False...")
+            gc.collect()
+            torch.cuda.empty_cache()
+            glb = o_voxel.postprocess.to_glb(
+                vertices=mesh.vertices, faces=mesh.faces, attr_volume=mesh.attrs,
+                coords=mesh.coords, attr_layout=pbr_attr_layout,
+                grid_size=res, aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
+                decimation_target=decimation_target, texture_size=texture_size,
+                remesh=False, remesh_band=1, remesh_project=0, use_tqdm=True,
+            )
+        else:
+            raise
 
     # Apply rotation
     rot = np.array([
@@ -379,6 +406,8 @@ def run_inference(
                 "cleanup_stats": cleanup_stats,
                 "stills": stills,
                 "preprocessed": save_preprocessed or None,
+                "vertices": int(getattr(glb, "vertices", np.zeros((0, 3))).shape[0]),
+                "faces": int(getattr(glb, "faces", np.zeros((0, 3))).shape[0]),
                 "seconds": elapsed,
             }, f, indent=2)
 

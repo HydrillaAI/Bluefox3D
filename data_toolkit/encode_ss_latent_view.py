@@ -137,15 +137,18 @@ if __name__ == '__main__':
     tasks = []
     skipped_count = 0
     
-    # Pre-fetch completion status columns for each view
-    encoded_cols = {view_idx: f'ss_latent_view{view_idx:02d}_encoded' for view_idx in view_indices}
-    
+    # Skip only this SS resolution's npz files, not merged root metadata flags.
     for _, row in metadata.iterrows():
         sha256 = row['sha256']
         for view_idx in view_indices:
-            encoded_col = encoded_cols[view_idx]
-            # Check if already marked as completed in metadata
-            if encoded_col in metadata.columns and row.get(encoded_col, False) == True:
+            output_path = os.path.join(
+                opt.ss_latent_root,
+                'ss_latents',
+                ss_latent_view_name,
+                sha256,
+                f'view{view_idx:02d}.npz'
+            )
+            if os.path.exists(output_path):
                 skipped_count += 1
                 continue
             tasks.append((sha256, view_idx))

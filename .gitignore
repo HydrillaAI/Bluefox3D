@@ -9,6 +9,8 @@ output*.glb
 *_preprocessed.png
 autotune_cache.json
 autotune_cache.json.lock
+autotune_cache_*.json
+autotune_cache_*.json.lock
 
 # Virtual environment
 venv/

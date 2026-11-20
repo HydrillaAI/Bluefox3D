@@ -596,10 +596,17 @@ class BlueFox3DImageTo3DPipeline(Pipeline):
         """
         meshes, subs = self.decode_shape_slat(shape_slat, resolution)
         tex_voxels = self.decode_tex_slat(tex_slat, subs)
+        del subs
+        import gc
+        gc.collect()
+        torch.cuda.empty_cache()
         out_mesh = []
         torch.cuda.synchronize()
         for m, v in zip(meshes, tex_voxels):
-            m.fill_holes()
+            try:
+                m.fill_holes()
+            except Exception as e:
+                print(f"[Warning] m.fill_holes failed ({e}), continuing with mesh...")
             out_mesh.append(
                 MeshWithVoxel(
                     m.vertices, m.faces,

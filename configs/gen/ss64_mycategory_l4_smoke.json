@@ -1,0 +1,101 @@
+{
+    "_comment": "50-step VRAM smoke for ss64_mycategory_l4",
+    "models": {
+        "denoiser": {
+            "name": "SparseStructureFlowModel",
+            "args": {
+                "resolution": 16,
+                "in_channels": 8,
+                "out_channels": 8,
+                "model_channels": 1536,
+                "cond_channels": 1024,
+                "num_blocks": 30,
+                "num_heads": 12,
+                "mlp_ratio": 5.3334,
+                "pe_mode": "rope",
+                "share_mod": true,
+                "initialization": "scaled",
+                "qk_rms_norm": true,
+                "qk_rms_norm_cross": true,
+                "image_attn_mode": "proj"
+            }
+        }
+    },
+    "dataset": {
+        "name": "ViewImageConditionedSparseStructureLatentView",
+        "args": {
+            "min_aesthetic_score": 4.5,
+            "image_size": 512,
+            "num_views": 2,
+            "load_camera_info": true,
+            "skip_aesthetic_score_datasets": [
+                "texverse",
+                "MyCategory"
+            ],
+            "skip_list": "/home/dharani/work/BlueFox3D/datasets/MyCategory/splits/skip_list.txt",
+            "pretrained_ss_dec": "microsoft/TRELLIS-image-large/ckpts/ss_dec_conv3d_16l8_fp16"
+        }
+    },
+    "trainer": {
+        "name": "ImageConditionedProjFlowMatchingCFGTrainer",
+        "args": {
+            "debug": false,
+            "max_steps": 50,
+            "batch_size_per_gpu": 1,
+            "batch_split": 1,
+            "snapshot_batch_size": 1,
+            "snapshot_num_samples": 1,
+            "num_workers": 2,
+            "prefetch_data": false,
+            "trainable_last_blocks": 4,
+            "optimizer": {
+                "name": "AdamW8bit",
+                "args": {
+                    "lr": 1e-05,
+                    "weight_decay": 0.01,
+                    "betas": [
+                        0.9,
+                        0.95
+                    ],
+                    "eps": 1e-08
+                }
+            },
+            "ema_rate": [],
+            "mix_precision_mode": "amp",
+            "mix_precision_dtype": "bfloat16",
+            "grad_clip": {
+                "name": "AdaptiveGradClipper",
+                "args": {
+                    "max_norm": 1.0,
+                    "clip_percentile": 95
+                }
+            },
+            "finetune_ckpt": {
+                "denoiser": "/home/dharani/work/BlueFox3D/ckpts/ss_flow_img_dit_1_3B_64_bf16.pt"
+            },
+            "i_print": 5,
+            "i_log": 5,
+            "i_sample": -1,
+            "i_save": 50,
+            "p_uncond": 0.1,
+            "t_schedule": {
+                "name": "logitNormal",
+                "args": {
+                    "mean": 1.0,
+                    "std": 1.0
+                }
+            },
+            "sigma_min": 1e-05,
+            "run_projection_test": false,
+            "image_cond_model": {
+                "name": "DinoV3ProjFeatureExtractor",
+                "args": {
+                    "model_name": "camenduru/dinov3-vitl16-pretrain-lvd1689m",
+                    "image_size": 512,
+                    "grid_resolution": 16
+                },
+                "image_attn_mode": "proj"
+            }
+        }
+    }
+}

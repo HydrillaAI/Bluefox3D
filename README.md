@@ -23,7 +23,7 @@ This repository is inference and training **Python code only**. It does **not** 
 ### 1. Clone this repo
 
 ```bash
-git clone <this-repo-url> BlueFox3D1.0
+git clone https://github.com/HydrillaAI/Bluefox3D.git BlueFox3D1.0
 cd BlueFox3D1.0
 ```
 
@@ -86,7 +86,7 @@ If `flash_attn` is not available, use PyTorch SDPA:
 ATTN_BACKEND=sdpa python inference.py --image assets/images/1_img.png --output ./output.glb --low_vram --resolution 1536
 ```
 
-Override the checkpoint with `BLUEFOX3D_MODEL` or `--model_path`. Default remains [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D). An optional character shape-512 finetune (last 4 blocks, 1000 steps; other cascade stages still stock) is [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) — see [COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md).
+Override the checkpoint with `BLUEFOX3D_MODEL` or `--model_path`. Default remains [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D). Optional last-4-block character packs (not replacements): shape-512 only [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) ([COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md)); four-stage cascade [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) ([COMPARE_RETRAINED_CHARACTERS.md](COMPARE_RETRAINED_CHARACTERS.md)).
 
 > `requirements-hfdemo.txt` is for the Hugging Face Spaces demo (H-series GPUs) and may not match other architectures.
 
@@ -98,6 +98,7 @@ Override the checkpoint with `BLUEFOX3D_MODEL` or `--model_path`. Default remain
 |---|---|
 | Default weights | [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) |
 | Optional character shape-512 | [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) (not a replacement) |
+| Optional 4-stage character pack | [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) (not a replacement) |
 | Env override | `BLUEFOX3D_MODEL` |
 | Config | `bluefox3d/config.py` → `DEFAULT_MODEL_PATH` |
 | Pipelines | `BlueFox3DImageTo3DPipeline`, `BlueFox3DMVImageTo3DPipeline` |
@@ -145,7 +146,15 @@ python train.py \
 
 `--data_dir` is a JSON string. Sparse structure needs `base`, `ss_latent`, `render_cond`; shape needs `base`, `shape_latent`, `render_cond`; texture needs `base`, `shape_latent`, `pbr_latent`, `render_cond`. Example configs live in `configs/gen/`.
 
-A 4× L4 character shape-512 run (Objaverse-LVIS subset, last 4 blocks, 1000 steps) is documented in [COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md) and [CHARACTER_FINETUNE_L4.md](CHARACTER_FINETUNE_L4.md). Config: `configs/gen/shape512_mycategory_l4.json`. That finetune is **not** better-than-Pixal3D on hold-out; it is a small mid-stage weight swap.
+A 4× L4 character shape-512 run (Objaverse-LVIS subset, last 4 blocks, 1000 steps) is documented in [COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md) and [CHARACTER_FINETUNE_L4.md](CHARACTER_FINETUNE_L4.md) (`configs/gen/shape512_mycategory_l4.json`). The follow-up 4-stage L4 character cascade (SS-64, copied shape-512, shape-1024, tex-1024) is documented in [COMPARE_RETRAINED_CHARACTERS.md](COMPARE_RETRAINED_CHARACTERS.md) (`data_toolkit/run_character_cascade.sh`). Neither L4 pack is a general quality upgrade over [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D), which remains the recommended default checkpoint.
+
+---
+
+## Model Cards & Benchmarks
+
+- Base Hugging Face card draft: [hf_bluefox3d_README.md](hf_bluefox3d_README.md) (for [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D))
+- Character pack card: [hf_retrained_characters_README.md](hf_retrained_characters_README.md) (for [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters))
+- One-image & cascade evaluations: [COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md), [COMPARE_RETRAINED_CHARACTERS.md](COMPARE_RETRAINED_CHARACTERS.md)
 
 ---
 
