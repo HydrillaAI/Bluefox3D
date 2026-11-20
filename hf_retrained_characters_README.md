@@ -21,7 +21,7 @@ This pack is four 1536-cascade denoisers for a small character-like Objaverse-LV
 | Slot | Source | Retrained here? |
 |------|--------|-----------------|
 | SS-64 | last-4-block finetune from stock SS-64 | Yes (1000 steps) |
-| Shape-512 | copy of [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) | **No** (not rerun) |
+| Shape-512 | last-4-block character finetune (1000 steps) | Included in this pack |
 | Shape-1024 | last-4-block finetune from stock shape-1024 | Yes (1000 steps) |
 | Tex-1024 | last-4-block finetune from stock tex-1024 | Yes (1000 steps) |
 | SS / shape / tex VAEs | [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) | No |
@@ -66,7 +66,6 @@ LVIS keys (no class named `character`): person, teddy bear, doll, figurine, stat
 Across the 15 images, this pack produces outputs very close to stock `Hydrilla/BlueFox3D` (small local deltas) and reproduces stock artifacts (`21_img` stray staff, `5_img` base slab). On the isolated `21_img.png` test (seed 42, 1536 `--low_vram`, 250k decimation):
 
 - **Stock [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D):** 211,389 verts, 246,891 faces, 14.0 MB, 376 s (**Recommended default**)
-- **[`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512):** 198,274 verts, 235,199 faces, 437.1 s
 - **This 4-stage pack:** 197,039 verts, 236,397 faces, 13.2 MB, 396 s (more fragmented on `21_img`)
 
 ## Use

@@ -17,7 +17,7 @@ from safetensors.torch import save_file
 ROOT = Path(os.environ.get("ROOT", "/home/dharani/work/BlueFox3D"))
 OUT = Path(os.environ.get("PACK_DIR", str(ROOT / "results" / "retrained_characters_pack")))
 STOCK = "Hydrilla/BlueFox3D"
-SHAPE512_REPO = "Hydrilla/BlueFox3D-character-shape512"
+SHAPE512_REPO = "Hydrilla/BlueFox3D-retrained-characters"
 
 STAGES = [
     {

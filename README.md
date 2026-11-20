@@ -86,7 +86,7 @@ If `flash_attn` is not available, use PyTorch SDPA:
 ATTN_BACKEND=sdpa python inference.py --image assets/images/1_img.png --output ./output.glb --low_vram --resolution 1536
 ```
 
-Override the checkpoint with `BLUEFOX3D_MODEL` or `--model_path`. Default remains [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D). Optional last-4-block character packs (not replacements): shape-512 only [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) ([COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md)); four-stage cascade [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) ([COMPARE_RETRAINED_CHARACTERS.md](COMPARE_RETRAINED_CHARACTERS.md)).
+Override the checkpoint with `BLUEFOX3D_MODEL` or `--model_path`. Default remains [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D). Optional 4-stage last-4-block character cascade (not a replacement): [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) ([COMPARE_RETRAINED_CHARACTERS.md](COMPARE_RETRAINED_CHARACTERS.md)).
 
 > `requirements-hfdemo.txt` is for the Hugging Face Spaces demo (H-series GPUs) and may not match other architectures.
 
@@ -97,7 +97,6 @@ Override the checkpoint with `BLUEFOX3D_MODEL` or `--model_path`. Default remain
 | | |
 |---|---|
 | Default weights | [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) |
-| Optional character shape-512 | [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) (not a replacement) |
 | Optional 4-stage character pack | [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) (not a replacement) |
 | Env override | `BLUEFOX3D_MODEL` |
 | Config | `bluefox3d/config.py` → `DEFAULT_MODEL_PATH` |
@@ -146,7 +145,7 @@ python train.py \
 
 `--data_dir` is a JSON string. Sparse structure needs `base`, `ss_latent`, `render_cond`; shape needs `base`, `shape_latent`, `render_cond`; texture needs `base`, `shape_latent`, `pbr_latent`, `render_cond`. Example configs live in `configs/gen/`.
 
-A 4× L4 character shape-512 run (Objaverse-LVIS subset, last 4 blocks, 1000 steps) is documented in [COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md) and [CHARACTER_FINETUNE_L4.md](CHARACTER_FINETUNE_L4.md) (`configs/gen/shape512_mycategory_l4.json`). The follow-up 4-stage L4 character cascade (SS-64, copied shape-512, shape-1024, tex-1024) is documented in [COMPARE_RETRAINED_CHARACTERS.md](COMPARE_RETRAINED_CHARACTERS.md) (`data_toolkit/run_character_cascade.sh`). Neither L4 pack is a general quality upgrade over [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D), which remains the recommended default checkpoint.
+The 4-stage L4 character cascade (SS-64, shape-512, shape-1024, tex-1024 on an Objaverse-LVIS subset, last 4 blocks, 1000 steps) is documented in [COMPARE_RETRAINED_CHARACTERS.md](COMPARE_RETRAINED_CHARACTERS.md) (`data_toolkit/run_character_cascade.sh`). It is not a general quality upgrade over [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D), which remains the recommended default checkpoint.
 
 ---
 
@@ -176,16 +175,14 @@ Measured directly from generated GLBs and run metadata on a single NVIDIA L4 (`g
 
 | Repo | What Changed | `21_img.png` (Seed 42, 1536 `--low_vram`) | Status |
 |---|---|---|---|
-| [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) | Stock Pixal3D / TRELLIS.2-architecture 1.3B 3-stage cascade | 210,075–211,389 verts, 246,515–246,891 faces, 14.0 MB, 376–436 s | **Recommended default** |
-| [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) | Shape-512 only (last 4 blocks, 1000 steps on 149 LVIS character GLBs) | 198,274 verts, 235,199 faces, 437.1 s (small mid-stage shift) | Experimental |
-| [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) | 4-stage L4 pack (SS-64, shape-1024, tex-1024 finetuned + copied shape-512) | 197,039 verts, 236,397 faces, 13.2 MB, 396 s (more fragmented on `21_img`) | Experimental |
+| [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) | Stock Pixal3D / TRELLIS.2-architecture 1.3B 3-stage cascade | 211,389 verts, 246,891 faces, 14.0 MB, 376 s | **Recommended default** |
+| [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) | 4-stage L4 pack (SS-64, shape-512, shape-1024, tex-1024 last-4-block finetune) | 197,039 verts, 236,397 faces, 13.2 MB, 396 s (more fragmented on `21_img`) | Experimental |
 
 ### Docs & Cards
 
 - Base Hugging Face card source: [hf_bluefox3d_README.md](hf_bluefox3d_README.md) ([`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D))
-- Character shape-512 card source: [hf_character_shape512_README.md](hf_character_shape512_README.md) ([`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512))
 - Character 4-stage pack card source: [hf_retrained_characters_README.md](hf_retrained_characters_README.md) ([`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters))
-- Detailed single-image & cascade notes: [COMPARE_CHARACTER_FT.md](COMPARE_CHARACTER_FT.md), [COMPARE_RETRAINED_CHARACTERS.md](COMPARE_RETRAINED_CHARACTERS.md)
+- Cascade evaluation: [COMPARE_RETRAINED_CHARACTERS.md](COMPARE_RETRAINED_CHARACTERS.md)
 
 ---
 

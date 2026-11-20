@@ -19,9 +19,8 @@ tags:
 - **Model card (Hydrilla):** [`hydrilla.ai/research#model-card`](https://hydrilla.ai/research#model-card)
 - **Weights provenance:** Baseline Pixal3D / TRELLIS.2-architecture 1.3B 3-stage cascade weights hosted under the Hydrilla organization as the default checkpoint for `BlueFox3D`.
 
-Optional experimental character L4 finetune packs (not drop-in quality replacements):
-- [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) — last-4-block 1000-step shape-512 finetune on an Objaverse-LVIS character subset.
-- [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) — 4-stage L4 pack (SS-64, copied shape-512, shape-1024, tex-1024).
+Optional experimental character L4 finetune pack (not a drop-in quality replacement):
+- [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) — 4-stage L4 pack (SS-64, shape-512, shape-1024, tex-1024).
 
 ---
 
@@ -93,9 +92,8 @@ Measured directly from generated GLBs and run metadata across 15 diverse images 
 
 | Repo | What Changed | Vertices | Faces | GLB Size | Status |
 |---|---|---:|---:|---:|---|
-| [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) | Stock 1.3B 3-stage cascade | 210,075–211,389 | 246,515–246,891 | 14.0 MB | **Recommended default** |
-| [`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) | Shape-512 only (last 4 blocks, 1000 steps) | 198,274 | 235,199 | — | Experimental |
-| [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) | 4-stage L4 pack (SS-64, shape-1024, tex-1024 + shape-512) | 197,039 | 236,397 | 13.2 MB | Experimental |
+| [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D) | Stock 1.3B 3-stage cascade | 211,389 | 246,891 | 14.0 MB | **Recommended default** |
+| [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters) | 4-stage L4 pack (SS-64, shape-512, shape-1024, tex-1024) | 197,039 | 236,397 | 13.2 MB | Experimental |
 
 ---
 

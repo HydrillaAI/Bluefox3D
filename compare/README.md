@@ -15,17 +15,6 @@ python make_pdf.py --runs ~/work/compare/runs --out ~/work/compare/BlueFox3D_vs_
 
 `run_compare.py` uses one worker per GPU. On a single L4 it runs jobs one after another.
 
-## Character shape-512 finetune compare (different shape-512 weights)
+## 4-stage retrained character cascade compare
 
-One-image neural compare (`21_img`, seed 42): [COMPARE_CHARACTER_FT.md](../COMPARE_CHARACTER_FT.md). Stills and metadata: [`ft_one_image/21_img/`](ft_one_image/21_img/). GLBs are gitignored.
-
-Run on the VM after `../sync_bluefox3d.sh`:
-
-```bash
-source ~/activate_bluefox3d.sh
-cd ~/work/compare
-python run_compare.py --bluefox ~/work/BlueFox3D --out ~/work/compare/runs
-python make_pdf.py --runs ~/work/compare/runs --out ~/work/compare/BlueFox3D_vs_Pixal3D.pdf
-```
-
-`run_compare.py` uses one worker per GPU. On a single L4 it runs jobs one after another.
+See [COMPARE_RETRAINED_CHARACTERS.md](../COMPARE_RETRAINED_CHARACTERS.md).

@@ -5,8 +5,7 @@
 **This is not a quality-win claim.** On this one image the pack is **more broken** than stock (extra islands, less coherent silhouette). Do not ship it as an upgrade from that still.
 
 Default inference still uses stock [`Hydrilla/BlueFox3D`](https://huggingface.co/Hydrilla/BlueFox3D).  
-The four-stage pack is a **separate** repo: [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters).  
-[`Hydrilla/BlueFox3D-character-shape512`](https://huggingface.co/Hydrilla/BlueFox3D-character-shape512) was not overwritten.
+The four-stage pack is a **separate** repo: [`Hydrilla/BlueFox3D-retrained-characters`](https://huggingface.co/Hydrilla/BlueFox3D-retrained-characters).
 
 ---
 
@@ -37,7 +36,7 @@ Same photo, same seed, same wrapper. The pack swaps three new denoisers plus the
 | Slot | This pack | Notes |
 |------|-----------|--------|
 | SS-64 | last-4-block, 1000 steps | 149 SS latents from shape-1024 |
-| Shape-512 | **copied**, not retrained | from `Hydrilla/BlueFox3D-character-shape512` |
+| Shape-512 | last-4-block, 1000 steps | included in this pack |
 | Shape-1024 | last-4-block, 1000 steps | `max_tokens` 2048 (official 32768 needs ~80 GB) |
 | Tex-1024 | last-4-block, 1000 steps | 120 PBR latents (shader dump failed on the rest) |
 | VAEs | stock `Hydrilla/BlueFox3D` | not trained |
