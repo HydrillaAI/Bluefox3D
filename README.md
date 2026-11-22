@@ -7,7 +7,7 @@ Image-to-3D generation with pixel-aligned geometry and PBR textures.
 </div>
 
 <div align="center">
-    <img src="assets/teaser.png" alt="Teaser image of BlueFox3D"/>
+    <img src="assets/teaser.png" alt="Water and sky fantasy asset gallery"/>
 </div>
 
 **BlueFox3D** generates high-fidelity 3D assets from a single image (or posed multi-view images). It lifts pixel features into 3D through back-projection so the mesh stays aligned with the input.
